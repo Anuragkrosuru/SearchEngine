@@ -1,5 +1,5 @@
-# SearchEngine
-SearchEngine project demo
+# Search Engine
+Search Engine project demo
 
 A scalable search engine similar to Google or Bing, built as part of the University of Michigan EECS 485 course. This project implements information retrieval concepts like text analysis (tf-idf) and link analysis (PageRank), along with parallel data processing using MapReduce.
 <img width="2458" height="1996" alt="image" src="https://github.com/user-attachments/assets/3fd3fe01-8e40-4710-a38b-b31a9442b350" />
