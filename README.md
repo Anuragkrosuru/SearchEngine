@@ -163,11 +163,12 @@ pydocstyle *.py
 - **Submission**: Tarball with source code and documentation
 - **Testing**: Must pass all public and hidden unit tests
 
-## 👨‍💻 Author
+## 👨‍💻 Authors
 
 **Anurag Krosuru**
 - GitHub: [@Anuragkrosuru](https://github.com/Anuragkrosuru)
 - LinkedIn: [anuragkro](https://www.linkedin.com/in/anuragkro)
+@justinsu, @tisyaM
 
 ## 🙏 Acknowledgments
 
