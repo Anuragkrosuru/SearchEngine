@@ -33,7 +33,7 @@ def get_hits():
     Extracts the search query and optional weight parameter (defaulting to 0.5).
     Returns a JSON object with a "hits" field.
     
-    The actual search logic is not implemented yet.
+    Add explain=1 to include the ranking components for each hit.
     """
     query = request.args.get("q", "")
     # If no query is provided, we can either return an error or an empty result.
@@ -45,13 +45,16 @@ def get_hits():
     except ValueError:
         weight = 0.5
 
-    # Call a placeholder search function that returns an empty list.
-    search_results = perform_search(query, weight)
+    # Explanations are opt-in to preserve the existing API response.
+    search_results = perform_search(query, weight, request.args.get("explain") == "1")
     
     return jsonify({"hits": search_results})
 
-def perform_search(query, weight):
+def perform_search(query, weight, explain=False):
     """Performs a search for the given query and PageRank weight `weight`."""
+
+    weight = weight if math.isfinite(weight) else 0.5
+    weight = max(0.0, min(1.0, weight))
 
     # 1) Clean the query just like you do for documents:
     # Remove non-alphanumeric chars, casefold, split on whitespace, remove stopwords
@@ -103,8 +106,9 @@ def perform_search(query, weight):
     for docid in common_docs:
         # 4) Construct the doc’s tf-idf vector for just the query terms
         doc_tfidf_vector = {}
+        doc_norm_squared = 0.0
         # We'll parse each relevant term's line in index_data to find doc tf + doc norm
-        for term in query_terms:
+        for term in q_tfidf:
             if term not in index_data:
                 continue  # skip missing terms
             tokens = index_data[term].split()
@@ -127,10 +131,11 @@ def perform_search(query, weight):
                         doc_tf_val = 0.0
                     # doc_tfidf = tf * idf
                     doc_tfidf_vector[term] = doc_tf_val * term_idf
+                    doc_norm_squared = float(tokens[i+2])
                     break
 
-        # 5) Compute the doc's norm using the values in the inverted index using the partial norm shit
-        doc_vec_norm = math.sqrt(sum(value * value for value in doc_tfidf_vector.values()))
+        # Use the full document vector norm stored in each posting.
+        doc_vec_norm = math.sqrt(doc_norm_squared)
 
         if doc_vec_norm == 0:
             # If doc's vector is empty or 0, skip
@@ -150,13 +155,25 @@ def perform_search(query, weight):
         doc_pr = pagerank.get(docid, 0.0)  # default 0 if not found
         score = weight * doc_pr + (1 - weight) * cos_sim
 
-        results.append({
-            "docid": int(docid),
-            "score": score
-        })
+        hit = {"docid": int(docid), "score": score}
+        if explain:
+            hit["explanation"] = {
+                "text_relevance": cos_sim,
+                "pagerank": doc_pr,
+                "pagerank_weight": weight,
+                "text_contribution": (1 - weight) * cos_sim,
+                "pagerank_contribution": weight * doc_pr,
+                "matched_terms": [
+                    {"term": term,
+                     "cosine_contribution": q_tfidf[term] * doc_tfidf_vector[term]
+                     / (q_norm * doc_vec_norm)}
+                    for term in q_tfidf
+                ],
+            }
+        results.append(hit)
 
     # 7) Sort the results in descending order by score
-    results.sort(key=lambda x: x["score"], reverse=True)
+    results.sort(key=lambda x: (-x["score"], x["docid"]))
     return results
 
 def process_query(query):
@@ -270,7 +287,7 @@ def load_index():
             # Process each line in the pagerank file.
             for line in f:
                 # Split the line into parts (expecting at least a docid and a score).
-                parts = line.split()
+                parts = line.replace(",", " ").split()
                 if len(parts) >= 2:
                     # The first part is the document ID.
                     docid = parts[0]
