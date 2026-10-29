@@ -182,7 +182,7 @@ pydocstyle *.py
 
 ## Explainable search interface
 
-The frontend preserves the original pink and white theme with a simpler search form,
+The frontend uses a simple blue and white theme with a simpler search form,
 and expandable **Why this result?** panels. Explanations show normalized matched
 query terms, each term's cosine contribution, TF-IDF cosine relevance, raw
 PageRank, and the two weighted contributions to the final score:
