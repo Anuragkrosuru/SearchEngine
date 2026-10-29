@@ -6,9 +6,13 @@
 <form action="/" method="get" class="search-form">
 <a class="brand" href="/">Search<span>Engine</span></a>
 <label class="sr-only" for="query">Search the document index</label>
-<div class="search-box"><input id="query" name="q" type="text" value="{{ query }}" placeholder="Search the web…" required autofocus><input type="submit" value="Search"></div>
+<div class="search-box"><input id="query" name="q" type="text" value="{{ query }}" placeholder="Search the collection…" required autofocus><input type="submit" value="Search"></div>
 <input name="w" type="hidden" value="{{ weight }}">
 </form>
+<p class="search-hint">Search a curated collection of Wikipedia articles. Try
+<a href="{{ url_for('main', q='web', w=weight) }}">web</a>,
+<a href="{{ url_for('main', q='mapreduce', w=weight) }}">MapReduce</a>, or
+<a href="{{ url_for('main', q='artificial intelligence', w=weight) }}">artificial intelligence</a>.</p>
 {% for warning in warnings %}<p class="warning" role="status">{{ warning }}</p>{% endfor %}
 {% if query %}
 <div class="results-heading"><h2>Results for “{{ query }}”</h2><span>{{ results|length }} shown · {{ total }} matches{% if warnings %} · partial{% endif %}</span></div>
@@ -19,6 +23,6 @@
 {% else %}<p class="footnote">Ranking explanation unavailable for this index segment.</p>{% endif %}
 </article>
 {% else %}<section class="empty"><h2>No results yet.</h2><p>{% if warnings %}Check the service messages above and try again.{% else %}Try fewer terms or another phrase. All searchable terms must match.{% endif %}</p></section>{% endfor %}
-{% else %}<p class="home-note">A little curiosity goes a long way.</p>{% endif %}
+{% endif %}
 </main>
 </body></html>
