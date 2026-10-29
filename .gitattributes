@@ -1,0 +1,4 @@
+# Bundled Wikipedia data is not application source code.
+inverted_index/crawl/** linguist-vendored
+inverted_index/example_crawl/** linguist-vendored
+inverted_index/crawl.tar.xz linguist-vendored
