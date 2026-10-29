@@ -179,3 +179,46 @@ pydocstyle *.py
 ---
 
 ⭐ **This project demonstrates advanced web systems concepts including distributed computing, information retrieval, and scalable architecture design.**
+
+## Explainable search interface
+
+The frontend preserves the original pink and white theme with a simpler search form,
+and expandable **Why this result?** panels. Explanations show normalized matched
+query terms, each term's cosine contribution, TF-IDF cosine relevance, raw
+PageRank, and the two weighted contributions to the final score:
+
+`score = (1 - w) * text_relevance + w * pagerank`
+
+These are scoring components, not confidence percentages. Cosine relevance uses
+the full document norm from the inverted index. The default ranking blends both components equally. API clients may set `w`
+to change the PageRank weight. Query matching uses AND semantics
+with stopwords removed. API clients can opt in with `explain=1`; the default
+response retains the original `docid` and `score` fields.
+
+### Run locally
+
+From the repository root (Python 3.12 or newer):
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+pip install Flask requests beautifulsoup4 pytest
+python bin/build-index
+python bin/searchdb
+```
+
+The rebuild command creates the three local index segments from the bundled
+crawl. It provides a local rebuild path because the inherited MapReduce
+pipeline is incomplete. In separate terminals, with the virtual environment
+activated, start each service:
+
+```sh
+PYTHONPATH=index_server INDEX_PATH=index_server/index/inverted_index/inverted_index_0.txt flask --app index run --port 9000
+PYTHONPATH=index_server INDEX_PATH=index_server/index/inverted_index/inverted_index_1.txt flask --app index run --port 9001
+PYTHONPATH=index_server INDEX_PATH=index_server/index/inverted_index/inverted_index_2.txt flask --app index run --port 9002
+PYTHONPATH=search_server flask --app search run --port 8000
+```
+
+Open http://localhost:8000. All three index services are needed for complete
+results. Service failures appear in the UI rather than silently implying no
+matches. Source provenance remains documented in `SOURCE.md`.

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>SearchEngine</title><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head>
+<body>
+<main class="{{ 'has-results' if query else 'home' }}">
+<form action="/" method="get" class="search-form">
+<a class="brand" href="/">Search<span>Engine</span></a>
+<label class="sr-only" for="query">Search the document index</label>
+<div class="search-box"><input id="query" name="q" type="text" value="{{ query }}" placeholder="Search the web…" required autofocus><input type="submit" value="Search"></div>
+<input name="w" type="hidden" value="{{ weight }}">
+</form>
+{% for warning in warnings %}<p class="warning" role="status">{{ warning }}</p>{% endfor %}
+{% if query %}
+<div class="results-heading"><h2>Results for “{{ query }}”</h2><span>{{ results|length }} shown · {{ total }} matches{% if warnings %} · partial{% endif %}</span></div>
+{% for result in results %}
+<article class="doc"><div class="result-top"><a class="doc_url" href="{{ result.url }}" rel="noreferrer">{{ result.url }}</a></div><div class="doc_title"><a href="{{ result.url }}" rel="noreferrer">{{ result.title }}</a></div><div class="doc_summary">{{ result.summary }}</div>
+{% if result.explanation %}{% set e = result.explanation %}
+<details><summary>Why this result? <span aria-hidden="true">+</span></summary><div class="explanation"><p>This page matches every searchable query term. Here’s how text relevance and PageRank contributed to its position.</p><div class="terms">{% for match in e.matched_terms %}<span>{{ match.term }} <small>+{{ '%.6f'|format(match.cosine_contribution) }} relevance</small></span>{% endfor %}</div><div class="metrics"><div><span>Text relevance</span><strong>{{ '%.6f'|format(e.text_relevance) }}</strong><small>× {{ '%.2f'|format(1-e.pagerank_weight) }} = {{ '%.6f'|format(e.text_contribution) }}</small></div><div><span>PageRank</span><strong>{{ '%.6f'|format(e.pagerank) }}</strong><small>× {{ '%.2f'|format(e.pagerank_weight) }} = {{ '%.6f'|format(e.pagerank_contribution) }}</small></div><div><span>Final score</span><strong>{{ '%.6f'|format(result.score) }}</strong><small>Sum of weighted contributions</small></div></div><p class="footnote">Term contributions sum to text relevance. Displayed values are rounded; scores are not probabilities. Text relevance uses the full document vector.</p></div></details>
+{% else %}<p class="footnote">Ranking explanation unavailable for this index segment.</p>{% endif %}
+</article>
+{% else %}<section class="empty"><h2>No results yet.</h2><p>{% if warnings %}Check the service messages above and try again.{% else %}Try fewer terms or another phrase. All searchable terms must match.{% endif %}</p></section>{% endfor %}
+{% else %}<p class="home-note">A little curiosity goes a long way.</p>{% endif %}
+</main>
+</body></html>

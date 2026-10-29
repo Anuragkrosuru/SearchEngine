@@ -3,6 +3,7 @@ from pathlib import Path
 import os
 
 def create_app():
+    app = Flask(__name__)
     # Define the directory containing the inverted index segments.
     # Here, __file__ refers to index/__init__.py, so we move into the 'inverted_index' folder.
     INDEX_DIR = Path(__file__).parent / "inverted_index"

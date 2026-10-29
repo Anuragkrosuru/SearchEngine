@@ -32,7 +32,6 @@ def get_db():
     return flask.g.sqlite_db
 
 
-@flask.current_app.teardown_appcontext
 def close_db(error):  # pylint: disable=unused-argument
     """
     Close the SQLite database at the end of the request.

@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+"""Rebuild local index segments from the bundled HTML crawl."""
+from collections import Counter, defaultdict
+import math
+from pathlib import Path
+import re
+from html.parser import HTMLParser
+
+class DocumentText(HTMLParser):
+    """Extract text and the crawl document identifier without building a DOM."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.docid = None
+        self.parts = []
+        self.hidden = 0
+
+    def handle_starttag(self, tag, attrs):
+        if tag in ('script', 'style'):
+            self.hidden += 1
+        if tag == 'meta':
+            value = dict(attrs).get('eecs485_docid')
+            if value is not None:
+                self.docid = int(value)
+
+    def handle_endtag(self, tag):
+        if tag in ('script', 'style'):
+            self.hidden = max(0, self.hidden - 1)
+
+    def handle_data(self, data):
+        if not self.hidden:
+            self.parts.append(data)
+
+
+root = Path(__file__).resolve().parents[1]
+stopwords = set((root / 'index_server/index/stopwords.txt').read_text().split())
+postings = defaultdict(list)
+paths = sorted((root / 'inverted_index/crawl').glob('*.html'))
+if not paths:
+    raise SystemExit('No HTML documents found in inverted_index/crawl')
+for path in paths:
+    parser = DocumentText()
+    parser.feed(path.read_text())
+    docid = parser.docid
+    if docid is None:
+        raise ValueError(f'Missing document identifier: {path}')
+    words = re.sub(r'[^a-zA-Z0-9 ]+', '', ' '.join(parser.parts)).casefold().split()
+    for term, count in Counter(word for word in words if word not in stopwords).items():
+        postings[term].append((docid, count))
+norms = defaultdict(float)
+idfs = {term: math.log10(len(paths) / len(docs)) for term, docs in postings.items()}
+for term, docs in postings.items():
+    for docid, count in docs:
+        norms[docid] += (count * idfs[term]) ** 2
+output = root / 'index_server/index/inverted_index'
+output.mkdir(exist_ok=True)
+handles = [(output / f'inverted_index_{i}.txt').open('w') for i in range(3)]
+try:
+    for term, docs in sorted(postings.items()):
+        for segment in range(3):
+            group = [(docid, count) for docid, count in docs if docid % 3 == segment]
+            if group:
+                values = ' '.join(f'{docid:08d} {count} {norms[docid]}' for docid, count in group)
+                handles[segment].write(f'{term} {idfs[term]} {values}\n')
+finally:
+    for handle in handles:
+        handle.close()
+print(f'Indexed {len(paths)} documents and {len(postings)} terms into three segments.')
