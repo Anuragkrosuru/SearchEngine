@@ -1,0 +1,11 @@
+Metadata-Version: 2.1
+Name: index
+Version: 1.0.0
+Requires-Python: >=3.12
+Requires-Dist: Flask
+Requires-Dist: numpy
+Requires-Dist: pycodestyle
+Requires-Dist: pydocstyle
+Requires-Dist: pylint
+Requires-Dist: pytest
+Requires-Dist: requests

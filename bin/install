@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# bin/install — set up virtualenv and install all dependencies
+
+# 1. Ensure python3 is available
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "Error: python3 is required but not found in PATH." >&2
+  exit 1
+fi
+
+# 2. Create a virtual environment (overwrite if exists)
+echo "Creating virtual environment in ./env..."
+python3 -m venv env
+
+# 3. Activate it in this script
+# shellcheck disable=SC1091
+. env/bin/activate
+
+# 4. Upgrade pip to latest
+echo "Upgrading pip..."
+pip install --upgrade pip
+
+# 5. Install project requirements
+if [ ! -f requirements.txt ]; then
+  echo "Error: requirements.txt not found." >&2
+  exit 1
+fi
+echo "Installing requirements..."
+pip install -r requirements.txt
+
+# 6. Install the two backend apps in editable mode
+echo "Installing index_server package..."
+pip install -e index_server
+
+echo "Installing search_server package..."
+pip install -e search_server
+
+echo
+echo "✔ Installation complete!"
+echo "To activate your environment in future shells, run:"
+echo "  source env/bin/activate"

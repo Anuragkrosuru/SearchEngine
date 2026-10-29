@@ -1,0 +1,7 @@
+Flask
+numpy
+pycodestyle
+pydocstyle
+pylint
+pytest
+requests

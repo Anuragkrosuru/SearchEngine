@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+# bin/index — control script for Index servers
+
+LOG_DIR="var/log"
+LOG_FILE="$LOG_DIR/index.log"
+INDEX_SERVER_CMD="flask --app index run --host 0.0.0.0"
+SEGMENTS=(0 1 2)
+PORTS=(9000 9001 9002)
+
+start() {
+    # If already running, error out
+    if status >/dev/null 2>&1; then
+        echo "Error: index server is already running"
+        return 1
+    fi
+
+    echo "starting index server ..."
+    mkdir -p "$LOG_DIR"
+    rm -f "$LOG_FILE"
+
+    # Launch one Flask process per segment in background
+    for i in "${!SEGMENTS[@]}"; do
+        seg=${SEGMENTS[i]}
+        port=${PORTS[i]}
+        INDEX_PATH="index_server/index/inverted_index/inverted_index_${seg}.txt" \
+            $INDEX_SERVER_CMD --port "$port" >> "$LOG_FILE" 2>&1 &
+    done
+}
+
+stop() {
+    echo "stopping index server ..."
+    # Kill each segment’s Flask process (ignore errors if not running)
+    pkill -f "flask --app index run --host 0.0.0.0 --port ${PORTS[0]}"  || true
+    pkill -f "flask --app index run --host 0.0.0.0 --port ${PORTS[1]}"  || true
+    pkill -f "flask --app index run --host 0.0.0.0 --port ${PORTS[2]}"  || true
+}
+
+restart() {
+    stop
+    start
+}
+
+status() {
+    # Count running Flask processes for ports 9000–9002
+    set +o pipefail
+    NPROCS=$(pgrep -f "flask --app index run --host 0.0.0.0 --port 900[0-2]" | wc -l)
+    set -o pipefail
+
+    if [ "$NPROCS" -eq 3 ]; then
+        echo "index server running"
+        return 0
+    elif [ "$NPROCS" -eq 0 ]; then
+        echo "index server stopped"
+        return 1
+    else
+        echo "index server error: found ${NPROCS} processes, expected 3"
+        return 2
+    fi
+}
+
+case "$1" in
+    start)   start ;;
+    stop)    stop ;;
+    restart) restart ;;
+    status)  status ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|status}"
+        exit 1
+        ;;
+esac
