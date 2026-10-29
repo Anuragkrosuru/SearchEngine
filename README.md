@@ -6,7 +6,7 @@ to see matched terms and how each ranking component contributes to the score.
 Try **web**, **MapReduce**, or **artificial intelligence**. Search covers the
 bundled collection, not the live web.
 
-<img src="docs/images/search-preview.png" alt="SearchEngine blue interface showing ranked search results and expandable ranking explanations" width="420">
+<img src="docs/images/search-preview.png" alt="SearchEngine homepage with a blue search bar and suggested searches" width="420">
 
 ## Features
 
