@@ -51,4 +51,4 @@ API: `/api/v1/hits/?q=mapreduce&w=0.5&explain=1`.
 PYTHONPATH=index_server:search_server python -m pytest tests/test_explanations.py -q
 ```
 
-Source history and attribution: [SOURCE.md](SOURCE.md).
+Original code: [tisyamukherjee/485p5](https://github.com/tisyamukherjee/485p5/tree/57022b20c275d5bb1d4e1b9351c2b223424227f3).
